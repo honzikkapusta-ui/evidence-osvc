@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evidence OSVČ</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--ink:#1c2430;--mute:#6b7685;--line:#dde2ea;--navy:#1f3a5f;--green:#2e7d5b;--red:#c0392b;--r:12px}
+@media(prefers-color-scheme:dark){:root{--bg:#10151c;--card:#19212b;--ink:#e8edf3;--mute:#93a0b0;--line:#2a3441;--navy:#7fa7d9;--green:#4cb98a;--red:#ee6f60}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,Segoe UI,Roboto,sans-serif}
+header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+@media(prefers-color-scheme:dark){header{background:#1d3150;color:#e8edf3}}
+header h1{margin:0;font-size:18px;flex:1}
+header select{font:inherit;padding:6px 8px;border-radius:8px;border:0}
+nav{display:flex;gap:4px;padding:8px 12px;overflow-x:auto;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
+nav button{flex:1 0 auto;border:0;background:none;color:var(--mute);font:inherit;font-weight:600;padding:10px 14px;border-radius:8px;cursor:pointer}
+nav button.on{background:var(--navy);color:#fff}
+@media(prefers-color-scheme:dark){nav button.on{color:#10151c}}
+main{max-width:900px;margin:0 auto;padding:16px}
+section{display:none}section.on{display:block}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px;text-align:center}
+.card small{display:block;color:var(--mute);font-weight:700;letter-spacing:.05em;font-size:11px}
+.card b{font-size:clamp(15px,4.4vw,22px)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:16px}
+.panel h2{margin:0 0 10px;font-size:16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+tfoot td{font-weight:700;border-top:2px solid var(--navy)}
+.bars{display:flex;gap:4px;align-items:flex-end;height:140px;margin-top:6px}
+.bars div{flex:1;display:flex;gap:2px;align-items:flex-end;height:100%;position:relative}
+.bars i{flex:1;display:block;min-height:1px;border-radius:3px 3px 0 0}
+.bars span{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--mute)}
+.bars{margin-bottom:24px}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--mute);gap:3px}
+input,select{font:inherit;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
+button.primary{background:var(--navy);color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer;align-self:end}
+@media(prefers-color-scheme:dark){button.primary{color:#10151c}}
+button.ghost{background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
+button.del{background:none;border:0;color:var(--red);cursor:pointer;font-size:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.note{color:var(--mute);font-size:13px}
+.warn{color:var(--red);font-weight:600}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<header><h1>Evidence OSVČ</h1><select id="year" aria-label="Rok"></select></header>
+<nav id="nav">
+  <button data-t="over" class="on">Přehled</button><button data-t="inc">Příjmy</button>
+  <button data-t="exp">Výdaje</button><button data-t="set">Nastavení</button>
+</nav>
+<main>
+<section id="over" class="on">
+  <div class="cards">
+    <div class="card"><small>PŘÍJMY</small><b id="kI" style="color:var(--green)"></b></div>
+    <div class="card"><small>VÝDAJE</small><b id="kE" style="color:var(--red)"></b></div>
+    <div class="card"><small>ZISK</small><b id="kP" style="color:var(--navy)"></b></div>
+  </div>
+  <div class="panel"><h2>Po měsících</h2><div class="bars" id="bars"></div>
+    <div class="scroll"><table id="months"></table></div></div>
+  <div class="panel"><h2>Paušální výdaje vs. skutečné</h2><table id="flat"></table>
+    <p class="note">Orientační přehled, ne daňové přiznání. Procento paušálu si ověř na financnisprava.gov.cz.</p></div>
+</section>
+<section id="inc">
+  <div class="panel"><h2>Nový příjem</h2>
+    <form id="fInc">
+      <label>Datum<input type="date" name="date" required></label>
+      <label>Zákazník<input name="who"></label>
+      <label>Č. dokladu<input name="doc"></label>
+      <label>Popis<input name="desc"></label>
+      <label>Částka (Kč)<input type="number" step="0.01" min="0" name="amt" required></label>
+      <button class="primary">Přidat</button>
+    </form>
+    <div class="scroll"><table id="tInc"></table></div></div>
+</section>
+<section id="exp">
+  <div class="panel"><h2>Nový výdaj</h2>
+    <form id="fExp">
+      <label>Datum<input type="date" name="date" required></label>
+      <label>Popis<input name="desc"></label>
+      <label>Kategorie<select name="cat" id="catSel"></select></label>
+      <label>Č. dokladu<input name="doc"></label>
+      <label>Částka (Kč)<input type="number" step="0.01" min="0" name="amt" required></label>
+      <button class="primary">Přidat</button>
+    </form>
+    <div class="scroll"><table id="tExp"></table></div></div>
+</section>
+<section id="set">
+  <div class="panel"><h2>Nastavení</h2>
+    <form id="fSet">
+      <label>Paušální výdaje (%)<input type="number" min="0" max="100" name="rate" id="rate"></label>
+      <label>Kategorie výdajů (oddělené čárkou)<input name="cats" id="cats"></label>
+      <button class="primary">Uložit</button>
+    </form>
+    <p class="note">Procento paušálu a limity si ověř na financnisprava.gov.cz. Aplikace je nepočítá za tebe.</p></div>
+  <div class="panel"><h2>Záloha a export</h2>
+    <p class="note">Data jsou jen v tomto prohlížeči (nikam se neposílají). Když smažeš data prohlížeče, přijdeš o ně, proto si občas stáhni zálohu.</p>
+    <div class="row">
+      <button class="ghost" id="bJson">Stáhnout zálohu (JSON)</button>
+      <button class="ghost" id="bCsv">Export CSV (rok)</button>
+      <button class="ghost" id="bImp">Obnovit ze zálohy</button>
+      <button class="ghost" id="bClr">Smazat všechna data</button>
+      <input type="file" id="fImp" accept="application/json" hidden>
+    </div></div>
+  <p class="note">Nenahrazuje účetní ani daňové poradenství.</p>
+</section>
+</main>
+<script>
+const KEY = "evidence-osvc-v1";
+const MONTHS = ["Leden","Únor","Březen","Duben","Květen","Červen","Červenec","Srpen","Září","Říjen","Listopad","Prosinec"];
+const DEF = {rate: 60, cats: ["Software a služby","Hardware a vybavení","Internet a telefon","Doprava","Reklama","Poplatky a banka","Vzdělávání","Ostatní"], inc: [], exp: []};
+const $ = s => document.querySelector(s);
+const kc = n => new Intl.NumberFormat("cs-CZ", {maximumFractionDigits: 0}).format(Math.round(n)) + " Kč";
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+let db, year = new Date().getFullYear();
+try { db = Object.assign({}, DEF, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch { db = structuredClone(DEF); }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch { alert("Data se nepodařilo uložit (zakázané úložiště v prohlížeči)."); } };
+
+// ponytail: pure helper, tested by test.html
+function monthly(items, y) {
+  const out = Array(12).fill(0);
+  for (const it of items) { const d = new Date(it.date); if (d.getFullYear() === y) out[d.getMonth()] += +it.amt; }
+  return out;
+}
+
+function years() {
+  const ys = new Set([new Date().getFullYear(), year]);
+  for (const it of [...db.inc, ...db.exp]) ys.add(new Date(it.date).getFullYear());
+  return [...ys].filter(Number.isFinite).sort((a, b) => b - a);
+}
+
+function ledger(el, items, cols, kind) {
+  const rows = items.filter(i => new Date(i.date).getFullYear() === year).sort((a, b) => b.date.localeCompare(a.date));
+  el.innerHTML = `<thead><tr>${cols.map(c => `<th>${c[0]}</th>`).join("")}<th></th></tr></thead><tbody>` +
+    (rows.map(r => `<tr>${cols.map(c => `<td>${c[1](r)}</td>`).join("")}<td><button class="del" data-k="${kind}" data-id="${r.id}" title="Smazat">✕</button></td></tr>`).join("") ||
+     `<tr><td colspan="${cols.length + 1}" class="note">Zatím nic za rok ${year}.</td></tr>`) + "</tbody>";
+}
+const fmtD = d => d.split("-").reverse().join(".");
+
+function render() {
+  $("#year").innerHTML = years().map(y => `<option${y === year ? " selected" : ""}>${y}</option>`).join("");
+  const I = monthly(db.inc, year), E = monthly(db.exp, year), sI = I.reduce((a, b) => a + b, 0), sE = E.reduce((a, b) => a + b, 0);
+  $("#kI").textContent = kc(sI); $("#kE").textContent = kc(sE); $("#kP").textContent = kc(sI - sE);
+  const max = Math.max(1, ...I, ...E);
+  $("#bars").innerHTML = MONTHS.map((m, i) => `<div><i style="height:${I[i] / max * 100}%;background:var(--green)"></i><i style="height:${E[i] / max * 100}%;background:var(--red)"></i><span>${["Led","Úno","Bře","Dub","Kvě","Čvn","Čvc","Srp","Zář","Říj","Lis","Pro"][i]}</span></div>`).join("");
+  $("#months").innerHTML = "<thead><tr><th>Měsíc</th><th>Příjmy</th><th>Výdaje</th><th>Zisk</th></tr></thead><tbody>" +
+    MONTHS.map((m, i) => `<tr><td>${m}</td><td>${kc(I[i])}</td><td>${kc(E[i])}</td><td>${kc(I[i] - E[i])}</td></tr>`).join("") +
+    `</tbody><tfoot><tr><td>Celkem</td><td>${kc(sI)}</td><td>${kc(sE)}</td><td>${kc(sI - sE)}</td></tr></tfoot>`;
+  const flat = sI * db.rate / 100;
+  $("#flat").innerHTML = `<tr><td>Paušální výdaje (${db.rate} %)</td><td>${kc(flat)}</td></tr><tr><td>Zisk při paušálu</td><td>${kc(sI - flat)}</td></tr><tr><td>Zisk při skutečných výdajích</td><td>${kc(sI - sE)}</td></tr>`;
+  ledger($("#tInc"), db.inc, [["Datum", r => fmtD(r.date)], ["Zákazník", r => esc(r.who)], ["Doklad", r => esc(r.doc)], ["Popis", r => esc(r.desc)], ["Částka", r => kc(r.amt)]], "inc");
+  ledger($("#tExp"), db.exp, [["Datum", r => fmtD(r.date)], ["Popis", r => esc(r.desc)], ["Kategorie", r => esc(r.cat)], ["Doklad", r => esc(r.doc)], ["Částka", r => kc(r.amt)]], "exp");
+  $("#catSel").innerHTML = db.cats.map(c => `<option>${esc(c)}</option>`).join("");
+  $("#rate").value = db.rate; $("#cats").value = db.cats.join(", ");
+}
+
+document.addEventListener("click", e => {
+  const t = e.target;
+  if (t.dataset.t) { document.querySelectorAll("nav button,section").forEach(x => x.classList.remove("on")); t.classList.add("on"); $("#" + t.dataset.t).classList.add("on"); }
+  if (t.dataset.k && confirm("Smazat tento záznam?")) { db[t.dataset.k] = db[t.dataset.k].filter(x => x.id !== t.dataset.id); save(); render(); }
+});
+$("#year").onchange = e => { year = +e.target.value; render(); };
+for (const [id, kind] of [["#fInc", "inc"], ["#fExp", "exp"]]) {
+  $(id).onsubmit = e => {
+    e.preventDefault();
+    const o = Object.fromEntries(new FormData(e.target)); o.id = crypto.randomUUID(); o.amt = +o.amt;
+    db[kind].push(o); year = new Date(o.date).getFullYear(); save(); e.target.reset(); render();
+  };
+}
+$("#fSet").onsubmit = e => {
+  e.preventDefault();
+  db.rate = Math.min(100, Math.max(0, +$("#rate").value || 0));
+  db.cats = $("#cats").value.split(",").map(s => s.trim()).filter(Boolean);
+  if (!db.cats.length) db.cats = DEF.cats;
+  save(); render();
+};
+function download(name, text, type) {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+$("#bJson").onclick = () => download(`evidence-zaloha-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(db, null, 1), "application/json");
+$("#bCsv").onclick = () => {
+  const q = v => `"${String(v ?? "").replace(/"/g, '""').replace(/^([=+\-@])/, "'$1")}"`;
+  const l = [["Typ", "Datum", "Zákazník/Popis", "Kategorie", "Doklad", "Částka"].map(q).join(";")];
+  for (const r of db.inc) if (new Date(r.date).getFullYear() === year) l.push(["Příjem", r.date, r.who + " " + r.desc, "", r.doc, r.amt].map(q).join(";"));
+  for (const r of db.exp) if (new Date(r.date).getFullYear() === year) l.push(["Výdaj", r.date, r.desc, r.cat, r.doc, r.amt].map(q).join(";"));
+  download(`evidence-${year}.csv`, "﻿" + l.join("\n"), "text/csv");
+};
+$("#bImp").onclick = () => $("#fImp").click();
+$("#fImp").onchange = async e => {
+  try {
+    const d = JSON.parse(await e.target.files[0].text());
+    if (!Array.isArray(d.inc) || !Array.isArray(d.exp)) throw 0;
+    if (confirm("Přepsat současná data zálohou?")) { db = Object.assign({}, DEF, d); save(); render(); }
+  } catch { alert("Tohle není platná záloha."); }
+  e.target.value = "";
+};
+$("#bClr").onclick = () => { if (confirm("Opravdu smazat VŠECHNA data? Nejdřív si stáhni zálohu.")) { db = structuredClone(DEF); save(); render(); } };
+render();
+</script>
+</body>
+</html>
